@@ -1,4 +1,4 @@
-export type MusicProviderName = "youtube" | "audius" | "musicbrainz";
+export type MusicProviderName = "youtube" | "audius" | "jamendo" | "musicbrainz";
 export type MusicRepeatMode = "off" | "all" | "one";
 
 export interface MusicTrackSummary {

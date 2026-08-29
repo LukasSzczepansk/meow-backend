@@ -33,7 +33,7 @@ export async function GET() {
   return NextResponse.json({
     tracks: rows.map((row) => ({
       ...row,
-      streamable: row.provider === "audius" || row.provider === "youtube",
+      streamable: row.provider === "audius" || row.provider === "jamendo" || row.provider === "youtube",
       addedByMe: row.addedByMemberId === member.memberId,
     })),
   });
@@ -147,7 +147,7 @@ export async function DELETE(request: Request) {
 function parseTrackInput(value: unknown) {
   const body = asRecord(value);
   if (!body) return null;
-  const provider = body.provider === "youtube" || body.provider === "audius" || body.provider === "musicbrainz" ? body.provider : null;
+  const provider = body.provider === "youtube" || body.provider === "audius" || body.provider === "jamendo" || body.provider === "musicbrainz" ? body.provider : null;
   const providerTrackId = asShortString(body.providerTrackId, 180);
   const title = asShortString(body.title, 240);
   const artist = asShortString(body.artist, 240);

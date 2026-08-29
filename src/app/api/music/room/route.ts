@@ -157,7 +157,7 @@ function clampPosition(value: unknown, durationMs: number | null, fallback: numb
 
 function parsePlayableTrack(value: unknown) {
   const row = asRecord(value);
-  const provider = row?.provider === "youtube" || row?.provider === "audius" ? row.provider : null;
+  const provider = row?.provider === "youtube" || row?.provider === "audius" || row?.provider === "jamendo" ? row.provider : null;
   if (!row || !provider) return null;
   const providerTrackId = shortString(row.providerTrackId, 180);
   const title = shortString(row.title, 240);

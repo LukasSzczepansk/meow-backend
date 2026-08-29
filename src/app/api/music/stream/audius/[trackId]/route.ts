@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getCurrentMember } from "@/lib/server/session";
-
 const PASSTHROUGH_HEADERS = [
   "accept-ranges",
   "cache-control",
@@ -12,9 +10,6 @@ const PASSTHROUGH_HEADERS = [
 ] as const;
 
 export async function GET(request: Request, { params }: { params: Promise<{ trackId: string }> }) {
-  const member = await getCurrentMember();
-  if (!member) return NextResponse.json({ error: "Brak sesji." }, { status: 401 });
-
   const { trackId } = await params;
   if (!/^[A-Za-z0-9_-]{2,180}$/.test(trackId)) {
     return NextResponse.json({ error: "Nieprawidłowy utwór." }, { status: 400 });

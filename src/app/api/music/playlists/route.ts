@@ -55,7 +55,7 @@ export async function GET() {
       trackCount: trackRows.length,
       tracks: trackRows.map((track) => ({
         ...track,
-        streamable: track.provider === "audius" || track.provider === "youtube",
+        streamable: track.provider === "audius" || track.provider === "jamendo" || track.provider === "youtube",
         addedByMe: track.addedByMemberId === member.memberId,
       })),
     };

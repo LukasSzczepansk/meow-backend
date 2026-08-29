@@ -3,6 +3,7 @@ import type { MusicTrackSummary } from "@/lib/music/types";
 
 const MUSICBRAINZ_BASE = "https://musicbrainz.org/ws/2";
 const AUDIUS_BASE = "https://api.audius.co/v1";
+const JAMENDO_BASE = "https://api.jamendo.com/v3.0";
 const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3";
 const SEARCH_CACHE_TTL_MS = 30 * 60 * 1000;
 const DISCOVER_CACHE_TTL_MS = 30 * 60 * 1000;
@@ -26,7 +27,11 @@ export function youtubeMusicConfigured() {
   return Boolean(process.env.YOUTUBE_API_KEY?.trim());
 }
 
-export async function searchMusic(source: "youtube" | "audius" | "musicbrainz", query: string): Promise<MusicTrackSummary[]> {
+export function jamendoMusicConfigured() {
+  return Boolean(process.env.JAMENDO_CLIENT_ID?.trim());
+}
+
+export async function searchMusic(source: "youtube" | "audius" | "jamendo" | "musicbrainz", query: string): Promise<MusicTrackSummary[]> {
   const normalized = query.trim().replace(/\s+/g, " ").slice(0, 120);
   if (normalized.length < 2) return [];
 
@@ -38,10 +43,55 @@ export async function searchMusic(source: "youtube" | "audius" | "musicbrainz", 
     ? await searchYouTube(normalized)
     : source === "audius"
       ? await searchAudius(normalized)
-      : await searchMusicBrainz(normalized);
+      : source === "jamendo"
+        ? await searchJamendo(normalized)
+        : await searchMusicBrainz(normalized);
 
   searchCache.set(cacheKey, { tracks, expiresAt: Date.now() + SEARCH_CACHE_TTL_MS });
   return tracks;
+}
+
+
+export async function searchUnifiedMusic(query: string): Promise<MusicTrackSummary[]> {
+  const normalized = query.trim().replace(/\s+/g, " ").slice(0, 120);
+  if (normalized.length < 2) return [];
+
+  const [audius, jamendo, youtube] = await Promise.all([
+    searchMusic("audius", normalized).catch((cause) => {
+      console.error("Audius unified search failed", cause);
+      return [] as MusicTrackSummary[];
+    }),
+    jamendoMusicConfigured()
+      ? searchMusic("jamendo", normalized).catch((cause) => {
+          console.error("Jamendo unified search failed", cause);
+          return [] as MusicTrackSummary[];
+        })
+      : Promise.resolve([] as MusicTrackSummary[]),
+    youtubeMusicConfigured()
+      ? searchMusic("youtube", normalized).catch((cause) => {
+          console.error("YouTube unified search failed", cause);
+          return [] as MusicTrackSummary[];
+        })
+      : Promise.resolve([] as MusicTrackSummary[]),
+  ]);
+
+  return interleaveUnique([audius, jamendo, youtube], 30);
+}
+
+export async function getOpenMusicDiscovery(): Promise<MusicTrackSummary[]> {
+  const [audius, jamendo] = await Promise.all([
+    getAudiusTrending().catch((cause) => {
+      console.error("Audius discovery failed", cause);
+      return [] as MusicTrackSummary[];
+    }),
+    jamendoMusicConfigured()
+      ? getJamendoFeatured().catch((cause) => {
+          console.error("Jamendo discovery failed", cause);
+          return [] as MusicTrackSummary[];
+        })
+      : Promise.resolve([] as MusicTrackSummary[]),
+  ]);
+  return interleaveUnique([audius, jamendo], 20);
 }
 
 export async function getPopularMusicInPoland(): Promise<MusicTrackSummary[]> {
@@ -227,9 +277,7 @@ async function searchAudius(query: string): Promise<MusicTrackSummary[]> {
   const apiKey = process.env.AUDIUS_API_KEY?.trim();
   if (apiKey) url.searchParams.set("api_key", apiKey);
 
-  const headers = new Headers({ Accept: "application/json" });
-  const bearerToken = process.env.AUDIUS_API_BEARER_TOKEN?.trim();
-  if (bearerToken) headers.set("Authorization", `Bearer ${bearerToken}`);
+  const headers = audiusHeaders();
 
   const response = await fetch(url, { headers, next: { revalidate: 600 } });
   if (!response.ok) throw new Error(`Audius search failed: ${response.status}`);
@@ -271,6 +319,113 @@ function toAudiusTrack(value: unknown): MusicTrackSummary | null {
     sourcePermalink: safeExternalUrl(asString(row.permalink)),
     streamable: flagAllowsStream && accessAllowsStream && !isGated,
   };
+}
+
+async function getAudiusTrending(): Promise<MusicTrackSummary[]> {
+  const url = new URL(`${AUDIUS_BASE}/tracks/trending`);
+  url.searchParams.set("limit", "14");
+  url.searchParams.set("time", "week");
+  const apiKey = process.env.AUDIUS_API_KEY?.trim();
+  if (apiKey) url.searchParams.set("api_key", apiKey);
+
+  const headers = audiusHeaders();
+  const response = await fetch(url, { headers, next: { revalidate: 900 } });
+  if (!response.ok) throw new Error(`Audius trending failed: ${response.status}`);
+  const payload: unknown = await response.json();
+  const data = asRecord(payload)?.data;
+  if (!Array.isArray(data)) return [];
+  return data.map(toAudiusTrack).filter((track): track is MusicTrackSummary => Boolean(track));
+}
+
+async function searchJamendo(query: string): Promise<MusicTrackSummary[]> {
+  const clientId = process.env.JAMENDO_CLIENT_ID?.trim();
+  if (!clientId) return [];
+  const url = new URL(`${JAMENDO_BASE}/tracks/`);
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("limit", "18");
+  url.searchParams.set("search", query);
+  url.searchParams.set("audioformat", "mp32");
+  url.searchParams.set("imagesize", "500");
+  url.searchParams.set("groupby", "artist_id");
+  url.searchParams.set("boost", "popularity_month");
+
+  const response = await fetch(url, { headers: { Accept: "application/json" }, next: { revalidate: 600 } });
+  if (!response.ok) throw new Error(`Jamendo search failed: ${response.status}`);
+  const payload: unknown = await response.json();
+  const results = asRecord(payload)?.results;
+  if (!Array.isArray(results)) return [];
+  return results.map(toJamendoTrack).filter((track): track is MusicTrackSummary => Boolean(track));
+}
+
+async function getJamendoFeatured(): Promise<MusicTrackSummary[]> {
+  const clientId = process.env.JAMENDO_CLIENT_ID?.trim();
+  if (!clientId) return [];
+  const url = new URL(`${JAMENDO_BASE}/tracks/`);
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("limit", "14");
+  url.searchParams.set("featured", "1");
+  url.searchParams.set("order", "popularity_month_desc");
+  url.searchParams.set("audioformat", "mp32");
+  url.searchParams.set("imagesize", "500");
+  url.searchParams.set("groupby", "artist_id");
+
+  const response = await fetch(url, { headers: { Accept: "application/json" }, next: { revalidate: 900 } });
+  if (!response.ok) throw new Error(`Jamendo featured failed: ${response.status}`);
+  const payload: unknown = await response.json();
+  const results = asRecord(payload)?.results;
+  if (!Array.isArray(results)) return [];
+  return results.map(toJamendoTrack).filter((track): track is MusicTrackSummary => Boolean(track));
+}
+
+function toJamendoTrack(value: unknown): MusicTrackSummary | null {
+  const row = asRecord(value);
+  if (!row) return null;
+  const id = asString(row.id);
+  const title = asString(row.name);
+  const artist = asString(row.artist_name);
+  if (!id || !title || !artist) return null;
+
+  const durationSeconds = asNumber(row.duration);
+  const audio = safeExternalUrl(asString(row.audio));
+  const artworkUrl = safeExternalUrl(asString(row.image)) ?? safeExternalUrl(asString(row.album_image));
+  return {
+    provider: "jamendo",
+    providerTrackId: id,
+    title,
+    artist,
+    album: asString(row.album_name),
+    artworkUrl,
+    durationMs: durationSeconds && durationSeconds > 0 ? Math.round(durationSeconds * 1000) : null,
+    sourcePermalink: safeExternalUrl(asString(row.shareurl)) ?? `https://www.jamendo.com/track/${encodeURIComponent(id)}`,
+    streamable: Boolean(audio),
+  };
+}
+
+function audiusHeaders() {
+  const headers = new Headers({ Accept: "application/json" });
+  const bearerToken = process.env.AUDIUS_API_BEARER_TOKEN?.trim();
+  if (bearerToken) headers.set("Authorization", `Bearer ${bearerToken}`);
+  return headers;
+}
+
+function interleaveUnique(groups: MusicTrackSummary[][], limit: number) {
+  const output: MusicTrackSummary[] = [];
+  const seen = new Set<string>();
+  const maxLength = Math.max(0, ...groups.map((group) => group.length));
+  for (let index = 0; index < maxLength && output.length < limit; index += 1) {
+    for (const group of groups) {
+      const track = group[index];
+      if (!track) continue;
+      const key = `${track.provider}:${track.providerTrackId}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      output.push(track);
+      if (output.length >= limit) break;
+    }
+  }
+  return output;
 }
 
 async function searchMusicBrainz(query: string): Promise<MusicTrackSummary[]> {
