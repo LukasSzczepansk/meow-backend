@@ -12,7 +12,7 @@ import {
 import { relations } from "drizzle-orm";
 
 // ---------------------------------------------------------------------------
-// Para (Couple) + CzĹ‚onkowie (Members) + Koty (Cats)
+// Para (Couple) + Członkowie (Members) + Koty (Cats)
 // ---------------------------------------------------------------------------
 
 export const couples = pgTable("couples", {
@@ -97,7 +97,7 @@ export const roomSlots = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// Check-iny (DziĹ›)
+// Check-iny (Dziś)
 // ---------------------------------------------------------------------------
 
 export const checkIns = pgTable(
@@ -121,7 +121,7 @@ export const checkIns = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// Szybkie sygnaĹ‚y miÄ™dzy partnerami (Miau)
+// Szybkie sygnały między partnerami (Miau)
 // ---------------------------------------------------------------------------
 
 export const meows = pgTable("meows", {
@@ -159,7 +159,7 @@ export const answers = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// KsiÄ™ga Nas
+// Księga Nas
 // ---------------------------------------------------------------------------
 
 export const bookEntries = pgTable("book_entries", {
@@ -239,7 +239,7 @@ export const memories = pgTable("memories", {
 });
 
 // ---------------------------------------------------------------------------
-// Ĺapki: transakcje nagrĂłd
+// Łapki: transakcje nagród
 // ---------------------------------------------------------------------------
 
 export const rewardTransactions = pgTable("reward_transactions", {
@@ -256,7 +256,7 @@ export const rewardTransactions = pgTable("reward_transactions", {
 });
 
 // ---------------------------------------------------------------------------
-// OsiÄ…gniÄ™cia
+// Osiągnięcia
 // ---------------------------------------------------------------------------
 
 export const achievementUnlocks = pgTable(
@@ -273,7 +273,7 @@ export const achievementUnlocks = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// ModuĹ‚ uspokojenia
+// Moduł uspokojenia
 // ---------------------------------------------------------------------------
 
 export const calmSessions = pgTable("calm_sessions", {
@@ -290,7 +290,7 @@ export const calmSessions = pgTable("calm_sessions", {
 });
 
 // ---------------------------------------------------------------------------
-// Tryb â€žPo kĹ‚Ăłtniâ€ť
+// Tryb „Po kłótni”
 // ---------------------------------------------------------------------------
 
 export const afterFightSessions = pgTable("after_fight_sessions", {
@@ -328,7 +328,7 @@ export const afterFightEntries = pgTable(
 
 
 // ---------------------------------------------------------------------------
-// Meow Core 2.0: sĹ‚oik randek, historia, aktywnoĹ›Ä‡ i ulubione
+// Meow Core 2.0: słoik randek, historia, aktywność i ulubione
 // ---------------------------------------------------------------------------
 
 export const dateIdeas = pgTable("date_ideas", {
@@ -393,7 +393,7 @@ export const coupleEvents = pgTable("couple_events", {
 });
 
 // ---------------------------------------------------------------------------
-// MEOW 5.0 Music Engine: wspĂłlna biblioteka + zsynchronizowany pokĂłj muzyczny
+// MEOW 5.0 Music Engine: wspólna biblioteka + zsynchronizowany pokój muzyczny
 // ---------------------------------------------------------------------------
 
 export const coupleTracks = pgTable(
@@ -415,12 +415,6 @@ export const coupleTracks = pgTable(
     durationMs: integer("duration_ms"),
     sourcePermalink: text("source_permalink"),
     isOurSong: boolean("is_our_song").notNull().default(false),
-    audioUrl: text("audio_url"),
-    audioStatus: text("audio_status").notNull().default("unavailable"),
-    listenCount: integer("listen_count").notNull().default(0),
-    lastPlayedAt: timestamp("last_played_at", { withTimezone: true }),
-    preparationRequestedAt: timestamp("preparation_requested_at", { withTimezone: true }),
-    audioUpdatedAt: timestamp("audio_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [unique().on(table.coupleId, table.provider, table.providerTrackId)],
