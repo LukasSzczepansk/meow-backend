@@ -12,32 +12,20 @@ if (-not (Test-Path (Join-Path $Target "package.json"))) {
 }
 
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$BackupDir = Join-Path $Target (".meow-patch-backups\cloud-backend-" + $Stamp)
+$BackupDir = Join-Path $Target (".meow-patch-backups\cloud-event-types-" + $Stamp)
 New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
 
-$OldDrizzle = Join-Path $Target "drizzle.config.json"
-if (Test-Path $OldDrizzle) {
-    Copy-Item -Force $OldDrizzle (Join-Path $BackupDir "drizzle.config.json")
-    Remove-Item -Force $OldDrizzle
+$Relative = "src\lib\server\events.ts"
+$Source = Join-Path $FilesRoot $Relative
+$Destination = Join-Path $Target $Relative
+$Backup = Join-Path $BackupDir $Relative
+$BackupParent = Split-Path -Parent $Backup
+
+New-Item -ItemType Directory -Force -Path $BackupParent | Out-Null
+if (Test-Path $Destination) {
+    Copy-Item -Force $Destination $Backup
 }
+Copy-Item -Force $Source $Destination
 
-$Copied = 0
-Get-ChildItem -Path $FilesRoot -Recurse -File | ForEach-Object {
-    $Relative = $_.FullName.Substring($FilesRoot.Length).TrimStart('\','/')
-    $Destination = Join-Path $Target $Relative
-    $DestinationDir = Split-Path -Parent $Destination
-
-    if (Test-Path $Destination) {
-        $BackupFile = Join-Path $BackupDir $Relative
-        $BackupFileDir = Split-Path -Parent $BackupFile
-        New-Item -ItemType Directory -Force -Path $BackupFileDir | Out-Null
-        Copy-Item -Force $Destination $BackupFile
-    }
-
-    New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
-    Copy-Item -Force $_.FullName $Destination
-    $Copied++
-}
-
-Write-Host ("MEOW Cloud Backend patch applied. Files copied: " + $Copied)
+Write-Host "MEOW Cloud Backend 1.0.1 event types hotfix applied."
 Write-Host ("Backup: " + $BackupDir)

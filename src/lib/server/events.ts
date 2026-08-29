@@ -17,6 +17,7 @@ export type CoupleEventType =
   | "relationship_event_added"
   | "music_added"
   | "music_our_song"
+  | "music_playlist_created"
   | "music_room_started";
 
 export async function createCoupleEvent(input: {
