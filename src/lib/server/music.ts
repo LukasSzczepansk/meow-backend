@@ -2,6 +2,8 @@ import "server-only";
 import type { MusicTrackSummary } from "@/lib/music/types";
 
 const MUSICBRAINZ_BASE = "https://musicbrainz.org/ws/2";
+const SOUNDCLOUD_BASE = "https://api.soundcloud.com";
+const SOUNDCLOUD_AUTH_BASE = "https://secure.soundcloud.com";
 const AUDIUS_BASE = "https://api.audius.co/v1";
 const JAMENDO_BASE = "https://api.jamendo.com/v3.0";
 const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3";
@@ -13,10 +15,18 @@ interface SearchCacheEntry {
   tracks: MusicTrackSummary[];
 }
 
+interface SoundCloudTokenState {
+  accessToken: string;
+  refreshToken: string | null;
+  expiresAt: number;
+}
+
 type MusicGlobals = typeof globalThis & {
   __meowMusicSearchCache?: Map<string, SearchCacheEntry>;
   __meowMusicBrainzQueue?: Promise<void>;
   __meowMusicBrainzLastRequestAt?: number;
+  __meowSoundCloudToken?: SoundCloudTokenState;
+  __meowSoundCloudTokenPromise?: Promise<SoundCloudTokenState>;
 };
 
 const musicGlobals = globalThis as MusicGlobals;
@@ -31,7 +41,11 @@ export function jamendoMusicConfigured() {
   return Boolean(process.env.JAMENDO_CLIENT_ID?.trim());
 }
 
-export async function searchMusic(source: "youtube" | "audius" | "jamendo" | "musicbrainz", query: string): Promise<MusicTrackSummary[]> {
+export function soundCloudMusicConfigured() {
+  return Boolean(process.env.SOUNDCLOUD_CLIENT_ID?.trim() && process.env.SOUNDCLOUD_CLIENT_SECRET?.trim());
+}
+
+export async function searchMusic(source: "youtube" | "soundcloud" | "audius" | "jamendo" | "musicbrainz", query: string): Promise<MusicTrackSummary[]> {
   const normalized = query.trim().replace(/\s+/g, " ").slice(0, 120);
   if (normalized.length < 2) return [];
 
@@ -41,11 +55,13 @@ export async function searchMusic(source: "youtube" | "audius" | "jamendo" | "mu
 
   const tracks = source === "youtube"
     ? await searchYouTube(normalized)
-    : source === "audius"
-      ? await searchAudius(normalized)
-      : source === "jamendo"
-        ? await searchJamendo(normalized)
-        : await searchMusicBrainz(normalized);
+    : source === "soundcloud"
+      ? await searchSoundCloud(normalized)
+      : source === "audius"
+        ? await searchAudius(normalized)
+        : source === "jamendo"
+          ? await searchJamendo(normalized)
+          : await searchMusicBrainz(normalized);
 
   searchCache.set(cacheKey, { tracks, expiresAt: Date.now() + SEARCH_CACHE_TTL_MS });
   return tracks;
@@ -56,7 +72,13 @@ export async function searchUnifiedMusic(query: string): Promise<MusicTrackSumma
   const normalized = query.trim().replace(/\s+/g, " ").slice(0, 120);
   if (normalized.length < 2) return [];
 
-  const [audius, jamendo, youtube] = await Promise.all([
+  const [soundcloud, audius, jamendo, youtube] = await Promise.all([
+    soundCloudMusicConfigured()
+      ? searchMusic("soundcloud", normalized).catch((cause) => {
+          console.error("SoundCloud unified search failed", cause);
+          return [] as MusicTrackSummary[];
+        })
+      : Promise.resolve([] as MusicTrackSummary[]),
     searchMusic("audius", normalized).catch((cause) => {
       console.error("Audius unified search failed", cause);
       return [] as MusicTrackSummary[];
@@ -75,7 +97,7 @@ export async function searchUnifiedMusic(query: string): Promise<MusicTrackSumma
       : Promise.resolve([] as MusicTrackSummary[]),
   ]);
 
-  return interleaveUnique([audius, jamendo, youtube], 30);
+  return interleaveUnique([soundcloud, audius, jamendo, youtube], 36);
 }
 
 export async function getOpenMusicDiscovery(): Promise<MusicTrackSummary[]> {
@@ -267,6 +289,166 @@ function requireYouTubeApiKey() {
   const key = process.env.YOUTUBE_API_KEY?.trim();
   if (!key) throw new Error("YOUTUBE_API_KEY is not configured");
   return key;
+}
+
+export async function getSoundCloudStreamUrl(trackUrn: string): Promise<string | null> {
+  if (!soundCloudMusicConfigured()) return null;
+  if (!/^(?:soundcloud:tracks:)?\d{1,30}$/.test(trackUrn)) return null;
+
+  const url = new URL(`${SOUNDCLOUD_BASE}/tracks/${encodeURIComponent(trackUrn)}/streams`);
+  const payload = await fetchSoundCloudJson(url);
+  const streams = asRecord(payload);
+  if (!streams) return null;
+
+  return safeExternalUrl(asString(streams.hls_aac_160_url))
+    ?? safeExternalUrl(asString(streams.hls_aac_96_url))
+    ?? null;
+}
+
+async function searchSoundCloud(query: string): Promise<MusicTrackSummary[]> {
+  if (!soundCloudMusicConfigured()) return [];
+  const url = new URL(`${SOUNDCLOUD_BASE}/tracks`);
+  url.searchParams.set("q", query);
+  url.searchParams.set("access", "playable");
+  url.searchParams.set("limit", "18");
+  url.searchParams.set("linked_partitioning", "true");
+
+  const payload = await fetchSoundCloudJson(url);
+  const root = asRecord(payload);
+  const collection = Array.isArray(payload) ? payload : root?.collection;
+  if (!Array.isArray(collection)) return [];
+  return collection.map(toSoundCloudTrack).filter((track): track is MusicTrackSummary => Boolean(track));
+}
+
+function toSoundCloudTrack(value: unknown): MusicTrackSummary | null {
+  const row = asRecord(value);
+  if (!row) return null;
+
+  const legacyId = typeof row.id === "number" || typeof row.id === "string" ? String(row.id) : null;
+  const urn = asString(row.urn) ?? (legacyId ? `soundcloud:tracks:${legacyId}` : null);
+  const title = asString(row.title);
+  if (!urn || !title) return null;
+
+  const user = asRecord(row.user);
+  const publisher = asRecord(row.publisher_metadata);
+  const artist = asString(row.metadata_artist)
+    ?? asString(publisher?.artist)
+    ?? asString(user?.username)
+    ?? "Nieznany wykonawca";
+  const access = asString(row.access);
+  const streamable = row.streamable !== false && access !== "preview" && access !== "blocked";
+  if (!streamable) return null;
+
+  const durationMs = asNumber(row.duration);
+  return {
+    provider: "soundcloud",
+    providerTrackId: urn,
+    title,
+    artist,
+    album: asString(publisher?.album_title),
+    artworkUrl: normalizeSoundCloudArtwork(asString(row.artwork_url)),
+    durationMs: durationMs && durationMs > 0 ? Math.round(durationMs) : null,
+    sourcePermalink: safeExternalUrl(asString(row.permalink_url)),
+    streamable: true,
+  };
+}
+
+async function fetchSoundCloudJson(url: URL): Promise<unknown> {
+  const firstToken = await getSoundCloudAccessToken();
+  let response = await fetch(url, {
+    headers: {
+      Accept: "application/json; charset=utf-8",
+      Authorization: `OAuth ${firstToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (response.status === 401) {
+    musicGlobals.__meowSoundCloudToken = undefined;
+    const nextToken = await getSoundCloudAccessToken(true);
+    response = await fetch(url, {
+      headers: {
+        Accept: "application/json; charset=utf-8",
+        Authorization: `OAuth ${nextToken}`,
+      },
+      cache: "no-store",
+    });
+  }
+
+  if (!response.ok) throw new Error(`SoundCloud request failed: ${response.status}`);
+  return response.json();
+}
+
+async function getSoundCloudAccessToken(forceRefresh = false): Promise<string> {
+  if (!soundCloudMusicConfigured()) throw new Error("SoundCloud is not configured");
+
+  const current = musicGlobals.__meowSoundCloudToken;
+  if (!forceRefresh && current && current.expiresAt > Date.now() + 60_000) return current.accessToken;
+  if (!forceRefresh && musicGlobals.__meowSoundCloudTokenPromise) {
+    return (await musicGlobals.__meowSoundCloudTokenPromise).accessToken;
+  }
+
+  const pending = requestSoundCloudToken(!forceRefresh ? current?.refreshToken ?? null : null);
+  musicGlobals.__meowSoundCloudTokenPromise = pending;
+  try {
+    const next = await pending;
+    musicGlobals.__meowSoundCloudToken = next;
+    return next.accessToken;
+  } finally {
+    if (musicGlobals.__meowSoundCloudTokenPromise === pending) {
+      musicGlobals.__meowSoundCloudTokenPromise = undefined;
+    }
+  }
+}
+
+async function requestSoundCloudToken(refreshToken: string | null): Promise<SoundCloudTokenState> {
+  const clientId = process.env.SOUNDCLOUD_CLIENT_ID?.trim();
+  const clientSecret = process.env.SOUNDCLOUD_CLIENT_SECRET?.trim();
+  if (!clientId || !clientSecret) throw new Error("SoundCloud credentials are not configured");
+
+  const body = new URLSearchParams();
+  const headers = new Headers({
+    Accept: "application/json; charset=utf-8",
+    "Content-Type": "application/x-www-form-urlencoded",
+  });
+
+  if (refreshToken) {
+    body.set("grant_type", "refresh_token");
+    body.set("client_id", clientId);
+    body.set("client_secret", clientSecret);
+    body.set("refresh_token", refreshToken);
+  } else {
+    body.set("grant_type", "client_credentials");
+    headers.set("Authorization", `Basic ${Buffer.from(`${clientId}:${clientSecret}`, "utf8").toString("base64")}`);
+  }
+
+  const response = await fetch(`${SOUNDCLOUD_AUTH_BASE}/oauth/token`, {
+    method: "POST",
+    headers,
+    body,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    if (refreshToken) return requestSoundCloudToken(null);
+    throw new Error(`SoundCloud token exchange failed: ${response.status}`);
+  }
+
+  const payload = asRecord(await response.json());
+  const accessToken = asString(payload?.access_token);
+  if (!accessToken) throw new Error("SoundCloud token response is missing access_token");
+  const expiresIn = Math.max(300, asNumber(payload?.expires_in) ?? 3600);
+  return {
+    accessToken,
+    refreshToken: asString(payload?.refresh_token),
+    expiresAt: Date.now() + expiresIn * 1000,
+  };
+}
+
+function normalizeSoundCloudArtwork(value: string | null): string | null {
+  const url = safeExternalUrl(value);
+  if (!url) return null;
+  return url.replace(/-large(?=\.[a-z0-9]+(?:\?|$))/i, "-t500x500");
 }
 
 async function searchAudius(query: string): Promise<MusicTrackSummary[]> {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/server/session";
-import { getOpenMusicDiscovery, jamendoMusicConfigured } from "@/lib/server/music";
+import { getOpenMusicDiscovery, jamendoMusicConfigured, soundCloudMusicConfigured } from "@/lib/server/music";
 
 export async function GET() {
   const member = await getCurrentMember();
@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({
       configured: true,
       popular,
-      sources: { audius: true, jamendo: jamendoMusicConfigured() },
+      sources: { soundcloud: soundCloudMusicConfigured(), audius: true, jamendo: jamendoMusicConfigured() },
       message: popular.length ? undefined : "Nie udało się teraz pobrać polecanej muzyki.",
     });
   } catch (cause) {

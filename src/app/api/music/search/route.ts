@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/server/session";
 import {
   jamendoMusicConfigured,
+  soundCloudMusicConfigured,
   searchMusic,
   searchUnifiedMusic,
   youtubeMusicConfigured,
 } from "@/lib/server/music";
 
-type SearchSource = "unified" | "youtube" | "audius" | "jamendo" | "musicbrainz";
+type SearchSource = "unified" | "youtube" | "soundcloud" | "audius" | "jamendo" | "musicbrainz";
 
 export async function GET(request: Request) {
   const member = await getCurrentMember();
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = (url.searchParams.get("q") ?? "").trim();
   const requested = url.searchParams.get("source");
-  const source: SearchSource = requested === "youtube" || requested === "audius" || requested === "jamendo" || requested === "musicbrainz"
+  const source: SearchSource = requested === "youtube" || requested === "soundcloud" || requested === "audius" || requested === "jamendo" || requested === "musicbrainz"
     ? requested
     : "unified";
 
@@ -24,6 +25,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ tracks: [], source, configured: true });
   }
 
+  if (source === "soundcloud" && !soundCloudMusicConfigured()) {
+    return NextResponse.json({ error: "Brakuje SOUNDCLOUD_CLIENT_ID / SOUNDCLOUD_CLIENT_SECRET.", configured: false, tracks: [] }, { status: 503 });
+  }
   if (source === "youtube" && !youtubeMusicConfigured()) {
     return NextResponse.json({ error: "Brakuje YOUTUBE_API_KEY.", configured: false, tracks: [] }, { status: 503 });
   }
@@ -40,6 +44,7 @@ export async function GET(request: Request) {
       source,
       configured: true,
       sources: {
+        soundcloud: soundCloudMusicConfigured(),
         audius: true,
         jamendo: jamendoMusicConfigured(),
         youtube: youtubeMusicConfigured(),
