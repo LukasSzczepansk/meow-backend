@@ -45,13 +45,15 @@ export async function POST() {
 
   if (existing) return NextResponse.json({ ok: true, alreadyDone: true });
 
-  await db.insert(challengeCompletions).values({
+  const [created] = await db.insert(challengeCompletions).values({
     coupleId: member.coupleId,
     challengeId: challenge.id,
     entryDate: today,
     completedByMemberId: member.memberId,
     rewardPaws: challenge.rewardPaws,
-  });
+  }).onConflictDoNothing().returning({ id: challengeCompletions.id });
+
+  if (!created) return NextResponse.json({ ok: true, alreadyDone: true });
 
   await awardPaws(member.coupleId, challenge.rewardPaws, "Wyzwanie dnia");
   await evaluateAchievements(member.coupleId);

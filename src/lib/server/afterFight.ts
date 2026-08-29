@@ -35,14 +35,22 @@ type FightField = "readyState" | "calmChoice" | "emotions" | "difficult" | "need
 
 export async function upsertStep(params: {
   sessionId: string;
+  coupleId: string;
   memberId: string;
   field: FightField;
   value: string | string[];
 }) {
+  const [session] = await db.select({ id: afterFightSessions.id })
+    .from(afterFightSessions)
+    .where(and(eq(afterFightSessions.id, params.sessionId), eq(afterFightSessions.coupleId, params.coupleId), eq(afterFightSessions.status, "in_progress")))
+    .limit(1);
+  if (!session) return false;
+
   const existing = await getEntry(params.sessionId, params.memberId);
   const patch: Record<string, unknown> = { [params.field]: params.value };
   if (existing) await db.update(afterFightEntries).set(patch).where(eq(afterFightEntries.id, existing.id));
   else await db.insert(afterFightEntries).values({ sessionId: params.sessionId, memberId: params.memberId, ...patch });
+  return true;
 }
 
 export async function getSessionStatus(sessionId: string, coupleId: string, memberId: string, partnerMemberId: string | null) {

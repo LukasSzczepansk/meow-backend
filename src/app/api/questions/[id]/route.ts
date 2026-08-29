@@ -19,8 +19,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const member = await getCurrentMember();
   if (!member) return NextResponse.json({ error: "Brak sesji." }, { status: 401 });
 
-  const body = await request.json();
-  const text = (body?.text as string | undefined)?.trim();
+  let body: unknown;
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: "Nieprawidłowe dane." }, { status: 400 }); }
+  const text = ((body as { text?: unknown })?.text as string | undefined)?.trim().slice(0, 1200);
   if (!text) return NextResponse.json({ error: "Napisz coś, zanim wyślesz odpowiedź." }, { status: 400 });
 
   const partner = await getPartnerMember(member.coupleId, member.memberId);

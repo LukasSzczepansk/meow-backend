@@ -15,7 +15,11 @@ export async function GET(request: Request) {
   const onThisDay = url.searchParams.get("onThisDay") === "1";
 
   const rows = await db.select().from(memories).where(eq(memories.coupleId, member.coupleId)).orderBy(desc(memories.entryDate));
-  const favorites = await db.select().from(memoryFavorites);
+  const favorites = await db
+    .select({ memoryId: memoryFavorites.memoryId, memberId: memoryFavorites.memberId })
+    .from(memoryFavorites)
+    .innerJoin(memories, eq(memories.id, memoryFavorites.memoryId))
+    .where(eq(memories.coupleId, member.coupleId));
   const favoriteMap = new Map<string, string[]>();
   for (const favorite of favorites) {
     const list = favoriteMap.get(favorite.memoryId) ?? [];
