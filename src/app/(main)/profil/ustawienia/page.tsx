@@ -1,0 +1,1 @@
+import { BackLink } from "@/components/navigation/BackLink";import { TopBar } from "@/components/navigation/TopBar";import { SettingsScreen } from "@/components/profile/SettingsScreen";export default function Page(){return <div className="flex flex-col gap-3 pb-4"><BackLink href="/profil"/><TopBar title="Ustawienia" subtitle="Dopasuj Meow do siebie."/><SettingsScreen/></div>}

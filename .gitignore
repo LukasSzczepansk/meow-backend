@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.env
+.env.local
+.env.*
+!.env.example
+!.env.cloud.example
+
+.meow-patch-backups/
+*.tsbuildinfo
+
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1462 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Newsreader", Georgia, serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+
+  --color-cream: #f7f4ee;
+  --color-cream-soft: #f1ede5;
+  --color-surface: #fbfaf7;
+  --color-surface-muted: #eee9e1;
+
+  --color-ink: #292724;
+  --color-ink-soft: #716c65;
+  --color-ink-faint: #9a948c;
+
+  --color-dusty-pink: #c98276;
+  --color-dusty-pink-soft: #ead4cf;
+  --color-sage: #8e9c88;
+  --color-sage-soft: #dce2d8;
+  --color-peach: #d8ad86;
+  --color-peach-soft: #eee0d1;
+  --color-brown: #866b56;
+  --color-brown-soft: #ded3c7;
+  --color-beige: #e7e0d5;
+
+  --shadow-soft: 0 16px 36px rgba(53, 45, 37, 0.07);
+  --shadow-softer: 0 6px 18px rgba(53, 45, 37, 0.045);
+}
+
+html,
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+* { box-sizing: border-box; }
+
+h1,
+h2,
+h3,
+h4 { letter-spacing: -0.025em; }
+
+button,
+input,
+textarea,
+select { font: inherit; }
+
+button { -webkit-tap-highlight-color: transparent; }
+
+::selection { background: var(--color-dusty-pink-soft); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.meow-editorial-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.meow-hairline { border-color: rgba(41, 39, 36, 0.1); }
+
+.meow-touch {
+  transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+.meow-touch:active { transform: scale(0.985); }
+
+@keyframes tail-sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(7deg); }
+}
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.08); }
+}
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@keyframes breathe-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes paw-drop {
+  0% { transform: translateY(-7px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Meow 3.0 themes — warm light and warm dark, never pure white/black.
+   Components consume semantic tokens so dark mode is not a CSS inversion.
+   -------------------------------------------------------------------------- */
+:root,
+html[data-theme="light"] {
+  --color-cream: #f7f4ee;
+  --color-cream-soft: #f1ede5;
+  --color-surface: #fbfaf7;
+  --color-surface-muted: #eee9e1;
+  --color-ink: #292724;
+  --color-ink-soft: #716c65;
+  --color-ink-faint: #9a948c;
+  --color-dusty-pink: #c98276;
+  --color-dusty-pink-soft: #ead4cf;
+  --color-sage: #8e9c88;
+  --color-sage-soft: #dce2d8;
+  --color-peach: #d8ad86;
+  --color-peach-soft: #eee0d1;
+  --color-brown: #866b56;
+  --color-brown-soft: #ded3c7;
+  --color-beige: #e7e0d5;
+  --color-danger: #a45e52;
+  --shadow-soft: 0 16px 36px rgba(53, 45, 37, 0.07);
+  --shadow-softer: 0 6px 18px rgba(53, 45, 37, 0.045);
+}
+
+html[data-theme="dark"] {
+  --color-cream: #171614;
+  --color-cream-soft: #1c1a18;
+  --color-surface: #211f1c;
+  --color-surface-muted: #292621;
+  --color-ink: #f2eee7;
+  --color-ink-soft: #b7b0a6;
+  --color-ink-faint: #8f887f;
+  --color-dusty-pink: #d18e83;
+  --color-dusty-pink-soft: #49312e;
+  --color-sage: #98a494;
+  --color-sage-soft: #303a30;
+  --color-peach: #d4a57c;
+  --color-peach-soft: #403329;
+  --color-brown: #c3a38a;
+  --color-brown-soft: #3a3028;
+  --color-beige: #34302b;
+  --color-danger: #d58e82;
+  --shadow-soft: 0 18px 46px rgba(0, 0, 0, 0.22);
+  --shadow-softer: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .meow-app-shell {
+  background-color: var(--color-cream);
+}
+
+html[data-theme="dark"] ::selection { background: #563934; }
+
+/* In dark mode borders derived from ink are intentionally subtler. */
+html[data-theme="dark"] .meow-hairline { border-color: rgba(242, 238, 231, 0.09); }
+
+.meow-theme-preview {
+  background: linear-gradient(155deg, var(--preview-bg) 0 64%, var(--preview-surface) 64% 100%);
+  border-color: var(--preview-border);
+  color: var(--preview-text);
+}
+
+/* Meow 3.5 — calm/play motion. Illustration motion only, never UI spectacle. */
+@keyframes meow-breathe-in { from { transform: scale(.96) translateY(3px); } to { transform: scale(1.055) translateY(-2px); } }
+@keyframes meow-breathe-out { from { transform: scale(1.055) translateY(-2px); } to { transform: scale(.96) translateY(3px); } }
+.meow-breathe-in { animation-name: meow-breathe-in; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
+.meow-breathe-out { animation-name: meow-breathe-out; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
+
+@keyframes meow-bubble-float { 0%,100% { transform: translate(-50%,-50%) translateY(0); } 50% { transform: translate(-50%,-50%) translateY(-7px); } }
+.meow-bubble { animation: meow-bubble-float 4.6s ease-in-out infinite; }
+
+@keyframes meow-rhythm-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+.meow-rhythm-pulse { animation: meow-rhythm-pulse 1.7s ease-in-out infinite; }
+
+@keyframes meow-raindrop-slide { 0%,100% { transform: translate(-50%,-50%) translateY(-2px); } 50% { transform: translate(-50%,-50%) translateY(8px); } }
+.meow-raindrop { animation: meow-raindrop-slide 5.5s ease-in-out infinite; }
+
+.meow-steam span { position:absolute; bottom:0; width:8px; height:50px; border-left:2px solid var(--color-ink-faint); border-radius:50%; opacity:.18; animation:meow-steam 3.4s ease-in-out infinite; }
+.meow-steam span:nth-child(1){ left:9px; animation-delay:0s; }
+.meow-steam span:nth-child(2){ left:28px; animation-delay:.7s; }
+.meow-steam span:nth-child(3){ left:46px; animation-delay:1.3s; }
+@keyframes meow-steam { 0% { transform:translateY(10px) translateX(0) scaleY(.7); opacity:0; } 35% { opacity:.2; } 100% { transform:translateY(-34px) translateX(5px) scaleY(1.1); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .meow-breathe-in,.meow-breathe-out,.meow-bubble,.meow-rhythm-pulse,.meow-raindrop,.meow-steam span { animation: none !important; }
+}
+@keyframes meow-ambient-rain { 0% { transform:translateY(-9px) rotate(15deg); opacity:.1; } 35% { opacity:.45; } 100% { transform:translateY(28px) rotate(15deg); opacity:0; } }
+.meow-ambient-rain { animation: meow-ambient-rain 2.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .meow-ambient-rain { animation:none !important; opacity:.28; } }
+
+/* Meow 3.6 — rendering engines stay inside the editorial UI, never become chrome. */
+.meow-game-stage canvas,
+.meow-pixi-stage canvas {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+  height: auto !important;
+  touch-action: manipulation;
+}
+@media (prefers-reduced-motion: reduce) {
+  .meow-game-stage canvas,
+  .meow-pixi-stage canvas { scroll-behavior: auto; }
+}
+
+/* --------------------------------------------------------------------------
+   Meow 4.1 — Product UI rebuild.
+   Relationship-journal inspired hierarchy: typography and rules before cards.
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-dusty-pink) 72%, transparent);
+  outline-offset: 3px;
+}
+
+.meow-app-shell {
+  isolation: isolate;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .meow-touch:hover {
+    opacity: .82;
+  }
+}
+
+@media (min-width: 560px) {
+  body {
+    background: var(--color-cream-soft);
+  }
+  .meow-app-shell {
+    border-inline: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Meow 4.2 — full visual UI rebuild.
+   Interaction patterns adapted from MIT relationship/mobile projects:
+   Couple Connect + Timeless Love. Branding, tokens and compositions are Meow.
+   -------------------------------------------------------------------------- */
+:root,
+html[data-theme="light"] {
+  --color-cream: #f1e8e2;
+  --color-cream-soft: #e9ddd5;
+  --color-surface: #fffaf6;
+  --color-surface-muted: #f3e8e2;
+  --color-ink: #302526;
+  --color-ink-soft: #716365;
+  --color-ink-faint: #9d8f90;
+  --color-primary: #b8616b;
+  --color-primary-strong: #8d434d;
+  --color-primary-soft: #efd8d9;
+  --color-dusty-pink: #b8616b;
+  --color-dusty-pink-soft: #efd8d9;
+  --color-sage: #758572;
+  --color-sage-soft: #dfe7dc;
+  --color-peach: #c89564;
+  --color-peach-soft: #f1dfcb;
+  --color-brown: #795a4d;
+  --color-brown-soft: #e4d3c9;
+  --color-beige: #e7d9d1;
+  --color-gold: #bd8c58;
+  --color-danger: #a84e54;
+  --shadow-soft: 0 20px 48px rgba(87, 56, 57, 0.13);
+  --shadow-softer: 0 8px 24px rgba(87, 56, 57, 0.09);
+  --shadow-button: 0 7px 0 rgba(118, 58, 65, 0.16), 0 12px 24px rgba(111, 55, 62, 0.13);
+}
+
+html[data-theme="dark"] {
+  --color-cream: #191415;
+  --color-cream-soft: #21191b;
+  --color-surface: #261e20;
+  --color-surface-muted: #302528;
+  --color-ink: #f7eeee;
+  --color-ink-soft: #c4b4b5;
+  --color-ink-faint: #948486;
+  --color-primary: #db7d87;
+  --color-primary-strong: #ee9aa3;
+  --color-primary-soft: #4b2b30;
+  --color-dusty-pink: #db7d87;
+  --color-dusty-pink-soft: #4b2b30;
+  --color-sage: #9cad98;
+  --color-sage-soft: #303d31;
+  --color-peach: #d7a172;
+  --color-peach-soft: #433126;
+  --color-brown: #c9a18f;
+  --color-brown-soft: #41302d;
+  --color-beige: #382b2d;
+  --color-gold: #d2a46e;
+  --color-danger: #e58a90;
+  --shadow-soft: 0 22px 52px rgba(0, 0, 0, .32);
+  --shadow-softer: 0 10px 28px rgba(0, 0, 0, .22);
+  --shadow-button: 0 7px 0 rgba(0, 0, 0, .18), 0 14px 28px rgba(0, 0, 0, .22);
+}
+
+body {
+  background-color: var(--color-cream-soft);
+}
+
+.meow-app-shell {
+  position: relative;
+  background-color: var(--color-cream);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-ink) 5%, transparent), 0 24px 80px rgba(66, 39, 43, .12);
+}
+
+.meow-app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 7px;
+  z-index: 45;
+  pointer-events: none;
+  background: var(--color-primary);
+}
+
+.meow-eyebrow {
+  color: var(--color-ink-faint);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.meow-button {
+  border-radius: 16px;
+  border: 1px solid transparent;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.meow-button:active { transform: translateY(2px) scale(.992); }
+.meow-btn-primary {
+  color: #fff8f7;
+  background: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary-strong) 55%, transparent);
+  box-shadow: var(--shadow-button);
+}
+.meow-btn-primary:hover { background: var(--color-primary-strong); opacity: 1; }
+.meow-btn-secondary {
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-ink) 10%, transparent);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--color-ink) 5%, transparent), var(--shadow-softer);
+}
+.meow-btn-outline {
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+.meow-btn-ghost { color: var(--color-ink-soft); background: transparent; }
+.meow-btn-ghost:hover { background: var(--color-surface-muted); }
+.meow-btn-meow {
+  color: #fff8f7;
+  background: var(--color-primary-strong);
+  border-color: color-mix(in srgb, #fff 14%, transparent);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--color-primary-strong) 68%, #2a1618 32%), 0 14px 28px rgba(96, 42, 49, .16);
+}
+
+.meow-card {
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-chip {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+  background: var(--color-surface);
+  color: var(--color-ink-soft);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.meow-chip-active {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.meow-list-row {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 13px;
+  border-radius: 17px;
+  color: var(--color-ink);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.meow-list-row + .meow-list-row { margin-top: 5px; }
+.meow-list-row:hover { background: var(--color-surface-muted); }
+.meow-list-icon {
+  display: grid;
+  height: 38px;
+  width: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+.meow-list-icon-quiet { color: var(--color-sage); background: var(--color-sage-soft); border-color: transparent; }
+.meow-row-arrow {
+  display: grid;
+  height: 30px;
+  width: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--color-ink-faint);
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+
+.meow-bottom-nav {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-cream) 6%);
+  box-shadow: 0 -12px 34px rgba(62, 40, 42, .08);
+}
+.meow-nav-item {
+  display: flex;
+  min-height: 56px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 16px;
+  color: var(--color-ink-faint);
+}
+.meow-nav-icon {
+  display: grid;
+  height: 28px;
+  width: 34px;
+  place-items: center;
+  border-radius: 11px;
+}
+.meow-nav-item-active { color: var(--color-primary-strong); background: var(--color-primary-soft); }
+.meow-nav-item-active .meow-nav-icon { color: var(--color-primary-strong); }
+.meow-nav-home.meow-nav-item-active { color: var(--color-ink); background: var(--color-sage-soft); }
+.meow-nav-home.meow-nav-item-active .meow-nav-icon { color: var(--color-sage); }
+
+.meow-topbar {
+  position: relative;
+  border-radius: 22px;
+  padding: 20px 18px;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+.meow-topbar-mark { display: block; width: 32px; height: 4px; border-radius: 99px; background: var(--color-primary); margin-bottom: 10px; }
+.meow-icon-button {
+  display: grid;
+  height: 42px;
+  width: 42px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--color-ink-soft);
+  background: var(--color-surface-muted);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+.meow-sheet {
+  border-radius: 26px 26px 18px 18px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+  background: var(--color-surface);
+  box-shadow: 0 -18px 60px rgba(55, 30, 34, .22);
+}
+
+.meow-segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 17px;
+  background: var(--color-surface-muted);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+.meow-segment {
+  min-height: 42px;
+  border-radius: 13px;
+  color: var(--color-ink-faint);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+.meow-segment-active {
+  color: var(--color-primary-strong);
+  background: var(--color-surface);
+  box-shadow: 0 3px 10px rgba(74, 43, 46, .09);
+}
+
+.meow-action-tile {
+  display: flex;
+  min-height: 98px;
+  align-items: center;
+  gap: 13px;
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+.meow-action-icon { display: grid; height: 42px; width: 42px; flex: 0 0 auto; place-items: center; border-radius: 14px; background: color-mix(in srgb, currentColor 10%, transparent); }
+.meow-action-rose { color: var(--color-primary-strong); background: var(--color-primary-soft); }
+.meow-action-sage { color: color-mix(in srgb, var(--color-sage) 78%, var(--color-ink)); background: var(--color-sage-soft); }
+.meow-action-sand { color: var(--color-brown); background: var(--color-peach-soft); }
+.meow-action-ink { color: var(--color-cream); background: var(--color-ink); }
+
+.meow-hero {
+  border-radius: 26px;
+  background: var(--color-primary-soft);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: var(--shadow-softer);
+  overflow: hidden;
+}
+.meow-section-surface {
+  border-radius: 22px;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+.meow-status-banner {
+  border-radius: 17px;
+  padding: 13px 14px;
+  background: var(--color-sage-soft);
+  color: var(--color-ink);
+  border: 1px solid color-mix(in srgb, var(--color-sage) 16%, transparent);
+}
+
+input:not([type="checkbox"]):not([type="radio"]), textarea, select {
+  border-radius: 15px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meow-button:active { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   MEOW 5.0 Music Engine — shared library + remote listening room.
+   No Spotify-style black chrome; the player stays inside Meow's warm system.
+   -------------------------------------------------------------------------- */
+.meow-music-hero {
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--color-primary-soft) 70%, var(--color-peach-soft) 30%);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-now-playing {
+  border-radius: 24px;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: var(--shadow-soft);
+}
+
+.meow-music-search {
+  border-radius: 18px;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-music-row {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 9px;
+  border-radius: 16px;
+}
+.meow-music-row + .meow-music-row { margin-top: 4px; }
+.meow-music-row:hover { background: var(--color-surface-muted); }
+
+.meow-mini-add {
+  display: grid;
+  height: 38px;
+  width: 38px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--color-primary-strong);
+  color: #fff8f7;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.meow-mini-join {
+  min-height: 38px;
+  border-radius: 12px;
+  padding: 0 12px;
+  background: var(--color-primary-strong);
+  color: #fff8f7;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.meow-mini-player {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-primary-soft) 6%);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+  box-shadow: 0 -6px 24px rgba(60, 37, 40, .09);
+}
+.meow-mini-progress {
+  height: 2px;
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+.meow-mini-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--color-primary);
+  transition: width 300ms linear;
+}
+
+.meow-music-range {
+  accent-color: var(--color-primary-strong);
+  cursor: pointer;
+}
+.meow-music-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--color-ink) 14%, transparent);
+}
+.meow-music-range::-webkit-slider-thumb {
+  margin-top: -6px;
+}
+
+html[data-theme="dark"] .meow-mini-player {
+  box-shadow: 0 -8px 26px rgba(0, 0, 0, .24);
+}
+
+/* --------------------------------------------------------------------------
+   MEOW 5.1 Music Studio — richer player, queue and shared playlists.
+   -------------------------------------------------------------------------- */
+.meow-music-hero-v2 {
+  position: relative;
+  background:
+    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--color-primary) 18%, transparent) 0 16%, transparent 17%),
+    color-mix(in srgb, var(--color-primary-soft) 62%, var(--color-peach-soft) 38%);
+}
+.meow-music-brandmark {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--color-primary-strong);
+  color: #fff8f7;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary-strong) 24%, transparent);
+}
+
+.meow-music-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary-soft) 4%);
+  box-shadow: var(--shadow-softer);
+}
+.meow-music-tab {
+  display: flex;
+  min-width: 0;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 13px;
+  color: var(--color-ink-faint);
+  font-size: 9.8px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.meow-music-tab.is-active {
+  background: var(--color-primary-strong);
+  color: #fff9f8;
+  box-shadow: 0 5px 13px color-mix(in srgb, var(--color-primary-strong) 20%, transparent);
+}
+
+.meow-full-player {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft) 35%, var(--color-surface)) 0%, var(--color-surface) 52%);
+  box-shadow: var(--shadow-soft);
+}
+.meow-full-player::before {
+  content: "";
+  position: absolute;
+  inset: -80px auto auto -90px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  filter: blur(8px);
+  pointer-events: none;
+}
+.meow-full-player.is-empty {
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.meow-empty-disc {
+  display: grid;
+  width: 118px;
+  height: 118px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-primary-strong);
+  background:
+    radial-gradient(circle, var(--color-surface) 0 13%, transparent 14%),
+    repeating-radial-gradient(circle, color-mix(in srgb, var(--color-primary-strong) 58%, var(--color-ink)) 0 5px, color-mix(in srgb, var(--color-primary-strong) 48%, var(--color-ink)) 6px 8px);
+  box-shadow: 0 18px 38px rgba(38, 22, 26, .13);
+}
+.meow-player-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  padding: 0 10px;
+  color: var(--color-ink-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+.meow-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-ink-faint);
+}
+.meow-live-dot.is-live {
+  background: var(--color-sage);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-sage) 14%, transparent);
+}
+.meow-player-art-wrap {
+  position: relative;
+  width: 210px;
+  height: 210px;
+}
+.meow-player-art-wrap > span:first-child { position: relative; z-index: 2; }
+.meow-player-art-glow {
+  position: absolute;
+  inset: 16px;
+  z-index: 1;
+  border-radius: 38px;
+  background: color-mix(in srgb, var(--color-primary) 34%, transparent);
+  filter: blur(30px);
+  opacity: .65;
+  transform: translateY(22px);
+}
+.meow-player-round-control,
+.meow-player-main-control,
+.meow-player-small-control {
+  display: grid;
+  place-items: center;
+  position: relative;
+  margin: auto;
+}
+.meow-player-round-control {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+.meow-player-round-control.is-primary { background: var(--color-primary-strong); color: #fff9f8; }
+.meow-player-main-control {
+  width: 62px;
+  height: 62px;
+  border-radius: 22px;
+  background: var(--color-primary-strong);
+  color: #fff9f8;
+  box-shadow: 0 11px 25px color-mix(in srgb, var(--color-primary-strong) 28%, transparent);
+}
+.meow-player-small-control {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: var(--color-ink-faint);
+}
+.meow-player-small-control.is-active {
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+}
+.meow-repeat-one {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primary-strong);
+  color: white;
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.meow-music-panel,
+.meow-playlist-create,
+.meow-playlist-detail {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  border-radius: 22px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-softer);
+}
+.meow-queue-row {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  gap: 9px;
+  border-radius: 13px;
+  padding: 5px 7px;
+}
+.meow-queue-row:hover { background: var(--color-surface-muted); }
+.meow-queue-row.is-current { background: var(--color-primary-soft); }
+
+.meow-music-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.meow-music-quick-card {
+  min-width: 0;
+  border-radius: 20px;
+  padding: 9px;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-music-input {
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 9%, transparent) !important;
+  background: var(--color-surface-muted) !important;
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+.meow-music-input:focus {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.meow-vibe-chip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--color-surface-muted);
+  color: var(--color-ink-soft);
+  font-size: 10.5px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+.meow-vibe-chip.is-active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.meow-playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+.meow-playlist-card {
+  min-width: 0;
+  border-radius: 20px;
+  padding: 10px;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  box-shadow: var(--shadow-softer);
+}
+.meow-playlist-cover {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 17px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  place-items: center;
+}
+.meow-playlist-cover > span {
+  background-size: cover;
+  background-position: center;
+}
+.meow-playlist-cover:not(.is-collage) > span { width: 100%; height: 100%; }
+.meow-playlist-cover.is-collage {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.meow-playlist-cover.is-collage > span { width: 100%; height: 100%; }
+.meow-playlist-cover.is-empty { background: color-mix(in srgb, var(--color-primary-soft) 70%, var(--color-peach-soft) 30%); }
+.meow-playlist-detail .meow-playlist-cover { width: 96px; height: 96px; aspect-ratio: auto; }
+.meow-playlist-picker-row {
+  display: flex;
+  width: 100%;
+  min-height: 58px;
+  align-items: center;
+  gap: 11px;
+  border-radius: 16px;
+  padding: 8px 9px;
+  background: var(--color-surface-muted);
+}
+.meow-playlist-picker-row:disabled { opacity: .58; }
+
+.meow-mini-player-v2 {
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-primary-soft) 8%);
+  border-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+.meow-mini-main {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--color-primary-strong);
+  color: #fff9f8;
+  box-shadow: 0 5px 13px color-mix(in srgb, var(--color-primary-strong) 20%, transparent);
+}
+
+@media (max-width: 360px) {
+  .meow-music-tab { font-size: 0; gap: 0; }
+  .meow-music-tab svg { width: 18px; height: 18px; }
+  .meow-player-art-wrap { width: 190px; height: 190px; }
+  .meow-player-art-wrap > span:first-child { width: 190px !important; height: 190px !important; }
+  .meow-mini-player-v2 .grid { gap: 7px; }
+}
+
+/* --------------------------------------------------------------------------
+   MEOW 6.0 Music Rebuild — compact editorial shell + real music discovery.
+   -------------------------------------------------------------------------- */
+.meow-music-v3 {
+  --music-line: color-mix(in srgb, var(--color-ink) 8%, transparent);
+  --music-soft: color-mix(in srgb, var(--color-primary-soft) 56%, var(--color-surface) 44%);
+}
+
+.meow-music-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 2px 4px;
+}
+.meow-music-header h1 {
+  margin-top: 3px;
+  color: var(--color-ink);
+  font-family: var(--font-editorial, "Newsreader", Georgia, serif);
+  font-size: clamp(31px, 8.5vw, 39px);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+.meow-music-header p:last-child {
+  margin-top: 8px;
+  max-width: 300px;
+  color: var(--color-ink-soft);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+.meow-music-search-button {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--music-line);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-music-tabs-v3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--music-line);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-softer);
+}
+.meow-music-tabs-v3 > button {
+  min-width: 0;
+  min-height: 42px;
+  border-radius: 12px;
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: -.01em;
+  transition: background-color 150ms ease, color 150ms ease, transform 120ms ease;
+}
+.meow-music-tabs-v3 > button.is-active {
+  background: var(--color-primary-strong);
+  color: #fff9f8;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary-strong) 18%, transparent);
+}
+.meow-music-tabs-v3 > button:active { transform: translateY(1px); }
+
+.meow-music-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  border-radius: 16px;
+  background: var(--color-surface);
+  padding: 11px 12px;
+  color: var(--color-danger);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.meow-now-playing {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--music-line));
+  border-radius: 24px;
+  background: var(--color-surface);
+  padding: 15px;
+  box-shadow: var(--shadow-soft);
+}
+.meow-now-playing-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.meow-now-playing-head h2 {
+  margin-top: 4px;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 850;
+  letter-spacing: -.025em;
+}
+.meow-now-playing-head p:last-child {
+  margin-top: 2px;
+  color: var(--color-ink-soft);
+  font-size: 11px;
+}
+.meow-listening-pill {
+  display: inline-flex;
+  min-height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  padding: 0 9px;
+  color: var(--color-ink-faint);
+  font-size: 9.5px;
+  font-weight: 850;
+}
+.meow-listening-pill > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.meow-listening-pill.is-live {
+  background: color-mix(in srgb, var(--color-sage) 17%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-sage) 75%, var(--color-ink));
+}
+
+.meow-youtube-shell {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #171313;
+}
+.meow-youtube-player,
+.meow-youtube-player iframe {
+  display: block;
+  width: 100% !important;
+  min-width: 200px;
+  height: auto !important;
+  min-height: 200px;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+.meow-youtube-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 9px;
+  background: #171313;
+  color: #fff8f7;
+  font-size: 10px;
+  font-weight: 750;
+}
+.meow-youtube-loading > span {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255,255,255,.24);
+  border-top-color: rgba(255,255,255,.9);
+  border-radius: 50%;
+  animation: meow-spin .8s linear infinite;
+}
+.meow-youtube-error {
+  position: absolute;
+  inset: auto 10px 10px;
+  border-radius: 12px;
+  background: rgba(27,20,20,.92);
+  padding: 9px 10px;
+  color: #fff8f7;
+  font-size: 10px;
+  line-height: 1.4;
+}
+@keyframes meow-spin { to { transform: rotate(360deg); } }
+
+.meow-legacy-art {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--music-soft);
+}
+
+.meow-player-controls {
+  display: grid;
+  grid-template-columns: 42px 46px 62px 46px 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.meow-music-primary-action {
+  display: inline-flex;
+  min-height: 38px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--color-primary-strong);
+  padding: 0 13px;
+  color: #fff9f8;
+  font-size: 10.5px;
+  font-weight: 850;
+  box-shadow: 0 5px 13px color-mix(in srgb, var(--color-primary-strong) 18%, transparent);
+}
+.meow-secondary-action {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--music-line);
+  border-radius: 15px;
+  background: var(--color-surface-muted);
+  padding: 0 15px;
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+.meow-small-text-action {
+  min-height: 34px;
+  border-radius: 11px;
+  background: var(--color-surface-muted);
+  padding: 0 11px;
+  color: var(--color-ink-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+.meow-small-text-action.is-danger { color: var(--color-danger); }
+
+.meow-music-config-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-radius: 18px;
+  background: var(--music-soft);
+  padding: 13px;
+  color: var(--color-primary-strong);
+}
+.meow-music-config-note strong { display: block; color: var(--color-ink); font-size: 11.5px; }
+.meow-music-config-note p { margin-top: 3px; color: var(--color-ink-soft); font-size: 10.5px; line-height: 1.45; }
+
+.meow-music-chip {
+  flex: 0 0 auto;
+  min-height: 36px;
+  border: 1px solid var(--music-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  padding: 0 13px;
+  color: var(--color-ink-soft);
+  font-size: 10.5px;
+  font-weight: 800;
+  box-shadow: var(--shadow-softer);
+}
+.meow-music-chip:active { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+
+.meow-our-song {
+  display: flex;
+  min-height: 96px;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-radius: 22px;
+  background: var(--music-soft);
+  padding: 11px;
+  box-shadow: var(--shadow-softer);
+}
+.meow-our-song-play {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--color-primary-strong);
+  color: #fff9f8;
+}
+
+.meow-track-list,
+.meow-popular-list {
+  overflow: hidden;
+  border: 1px solid var(--music-line);
+  border-radius: 19px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-softer);
+}
+.meow-track-row {
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 6%, transparent);
+  padding: 5px 6px 5px 7px;
+}
+.meow-track-row:last-child { border-bottom: 0; }
+.meow-track-main {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+.meow-track-main strong {
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: -.012em;
+}
+.meow-track-main small {
+  margin-top: 2px;
+  color: var(--color-ink-faint);
+  font-size: 9.8px;
+  line-height: 1.35;
+}
+.meow-track-index {
+  width: 20px;
+  flex: 0 0 auto;
+  text-align: center;
+  color: var(--color-ink-faint);
+  font-size: 10px;
+  font-weight: 800;
+}
+.meow-inline-play {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--color-primary-strong);
+}
+.meow-row-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--color-ink-faint);
+}
+.meow-row-icon.is-primary { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.meow-row-icon.is-saved { color: color-mix(in srgb, var(--color-sage) 70%, var(--color-ink)); }
+.meow-our-badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  padding: 5px 7px;
+  color: var(--color-primary-strong);
+  font-size: 8.5px;
+  font-weight: 850;
+}
+
+.meow-track-art {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  background: var(--music-soft);
+  background-position: center;
+  background-size: cover;
+  color: var(--color-primary-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 6%, transparent);
+}
+
+.meow-music-cover-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.meow-cover-card {
+  min-width: 0;
+  border-radius: 19px;
+  background: var(--color-surface);
+  padding: 8px;
+  box-shadow: var(--shadow-softer);
+  border: 1px solid var(--music-line);
+}
+
+.meow-playlist-strip {
+  display: grid;
+  grid-auto-columns: minmax(130px, 42%);
+  grid-auto-flow: column;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scroll-snap-type: x proximity;
+}
+.meow-playlist-tile { min-width: 0; scroll-snap-align: start; }
+.meow-playlist-cover-v3 {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--music-soft);
+  color: var(--color-primary-strong);
+  box-shadow: inset 0 0 0 1px var(--music-line);
+}
+.meow-playlist-cover-v3.is-collage {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.meow-playlist-cover-v3 > span {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+}
+.meow-playlist-cover-v3.is-empty { background: var(--music-soft); }
+
+.meow-music-search-v3 {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 17%, var(--music-line));
+  border-radius: 18px;
+  background: var(--color-surface);
+  padding: 5px 6px 5px 14px;
+  box-shadow: var(--shadow-softer);
+}
+.meow-music-search-v3:focus-within {
+  border-color: color-mix(in srgb, var(--color-primary) 46%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.meow-library-toggle {
+  display: inline-flex;
+  gap: 3px;
+  border-radius: 14px;
+  background: var(--color-surface-muted);
+  padding: 3px;
+}
+.meow-library-toggle > button {
+  min-height: 36px;
+  border-radius: 11px;
+  padding: 0 14px;
+  color: var(--color-ink-faint);
+  font-size: 10.5px;
+  font-weight: 850;
+}
+.meow-library-toggle > button.is-active {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-playlist-create-v3,
+.meow-playlist-detail-v3,
+.meow-playlist-edit {
+  border: 1px solid var(--music-line);
+  border-radius: 21px;
+  background: var(--color-surface);
+  padding: 15px;
+  box-shadow: var(--shadow-softer);
+}
+.meow-playlist-grid-v3 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+.meow-playlist-card-v3 {
+  min-width: 0;
+  border-radius: 20px;
+  border: 1px solid var(--music-line);
+  background: var(--color-surface);
+  padding: 8px;
+  box-shadow: var(--shadow-softer);
+}
+
+.meow-mini-player-v3 {
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-primary) 12%, var(--music-line));
+}
+
+html[data-theme="dark"] .meow-youtube-shell,
+html[data-theme="dark"] .meow-youtube-loading { background: #090808; }
+html[data-theme="dark"] .meow-now-playing { box-shadow: 0 12px 34px rgba(0,0,0,.2); }
+
+@media (max-width: 360px) {
+  .meow-music-header h1 { font-size: 31px; }
+  .meow-player-controls { grid-template-columns: 38px 42px 56px 42px 38px; gap: 3px; }
+  .meow-player-main-control { width: 56px; height: 56px; border-radius: 19px; }
+  .meow-player-round-control { width: 42px; height: 42px; border-radius: 14px; }
+  .meow-playlist-strip { grid-auto-columns: minmax(126px, 46%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meow-youtube-loading > span { animation: none; }
+  .meow-music-tabs-v3 > button { transition: none; }
+}
+
+.meow-youtube-wrap { width: 100%; }
+.meow-youtube-status,
+.meow-youtube-error {
+  margin-top: 7px;
+  padding: 0 2px;
+  color: var(--color-ink-faint);
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+.meow-youtube-error { color: var(--color-danger); }

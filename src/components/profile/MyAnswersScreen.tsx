@@ -1,0 +1,5 @@
+"use client";
+import { useEffect,useState } from "react";
+import { Card } from "@/components/ui/Card";
+interface Item {id:string;questionText:string;answerText:string;createdAt:string}
+export function MyAnswersScreen(){const [items,setItems]=useState<Item[]|null>(null);const [error,setError]=useState<string|null>(null);useEffect(()=>{fetch("/api/answers/mine").then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error);return d;}).then(d=>setItems(d.items)).catch(e=>setError(e instanceof Error?e.message:"Nie udało się wczytać odpowiedzi."));},[]);if(error)return <Card className="mx-5 text-center text-sm">{error}</Card>;if(!items)return <div className="mx-5 h-48 animate-pulse rounded-[22px] bg-[var(--color-surface-muted)]"/>;return <div className="flex flex-col gap-3 px-5">{items.length===0?<Card className="text-center"><p className="text-sm text-[var(--color-ink-soft)]">Nie masz jeszcze zapisanych odpowiedzi.</p></Card>:items.map(i=><Card key={i.id}><p className="text-xs font-semibold text-[var(--color-ink-faint)]">{i.questionText}</p><p className="mt-1 text-sm leading-relaxed text-[var(--color-ink)]">{i.answerText}</p></Card>)}</div>}
